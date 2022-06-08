@@ -11,7 +11,7 @@ import { PokemonListResponse, Pokemon } from '../../types';
 import { getPokemonInfo, localFavorites } from '../../utils';
 
 interface Props {
-  pokemon: Pokemon
+  pokemon: Pokemon;
 }
 
 const PokemonPageByName: NextPage<Props> = ({ pokemon }) => {
@@ -111,14 +111,23 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   return {
     paths: pokemons151.map((name) => ({ params: { name } })),
-    fallback: false,
+    fallback: 'blocking',
   };
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const { name } = params as { name: string };
 
-  return { props: { pokemon: await getPokemonInfo(name) } };
+  const pokemon = await getPokemonInfo(name);
+  if (!pokemon) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+  return { props: { pokemon }, revalidate: 86400 };
 };
 
 export default PokemonPageByName;
